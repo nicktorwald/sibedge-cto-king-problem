@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  adder-service:
+    image: nicktorwald/adder-service:cto-king
+    environment:
+      - ADDER_SERVICE_KAFKA_CONNECT=localhost:9094
+      - ADDER_SERVICE_REST_HOST=rest-service
+      - ADDER_SERVICE_REST_PORT=8222
+      - ADDER_SERVICE_MONGO_HOST=mongo
+      - ADDER_SERVICE_MONGO_PORT=27017
+      - ADDER_SERVICE_MQ_IN_TOPIC=number.result
+      - ADDER_SERVICE_MQ_OUT_TOPIC=number.request
+      - ADDER_SERVICE_LISTEN_PORT=8111
+    ports:
+      - "8111:8111"
+    sysctls:
+      net.core.somaxconn: 2048
+    ulimits:
+      nofile:
+        soft: 2048
+        hard: 4096
+
+  rest-service:
+    image: nicktorwald/rest-service:cto-king
+    environment:
+      - REST_SERVICE_PROCESS_DELAY=1000
+      - REST_SERVICE_LISTEN_PORT=8222
+    ports:
+      - "8222:8222"
+
+  mq-service:
+    image: nicktorwald/mq-service:cto-king
+    environment:
+      - MQ_SERVICE_MQ_IN_TOPIC=number.request
+      - MQ_SERVICE_MQ_OUT_TOPIC=number.result
+      - MQ_SERVICE_KAFKA_CONNECT=localhost:9092
+      - MQ_SERVICE_PROCESS_DELAY=1000
+
+volumes:
+  kafka_data:
+    driver: local
